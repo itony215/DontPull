@@ -1,10 +1,11 @@
 //https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/1f85c73e-d39f-4719-bda5-889f4e4afd5f?subscription-key=a755d82f005e4d54bf63a14565213823&timezoneOffset=0.0&verbose=true&q=我要聽周杰倫的安靜
 const { API_KEY } = require('./config');
 const API_URL = `https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/1f85c73e-d39f-4719-bda5-889f4e4afd5f?subscription-key=${API_KEY}&timezoneOffset=0.0&verbose=true&q='`;
-https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/1f85c73e-d39f-4719-bda5-889f4e4afd5f?subscription-key=a755d82f005e4d54bf63a14565213823&timezoneOffset=0.0&verbose=true&q=qwer
+const YOUTUBE_API = `https://www.youtube.com/results?search_query=`;
 var restify = require('restify');
 var builder = require('botbuilder');
 var request = require('request');
+var cheerio = require('cheerio');
 //=========================================================
 // Bot Setup
 //=========================================================
@@ -54,6 +55,19 @@ bot.dialog('/',
           session.send('I don\'t understand');
         } else {
           session.send(intent)
+          console.warn('result.response', result.response);
+          const youtubeUrl = `${YOUTUBE_API}${encodeURIComponent(result.response)}`;
+          console.log(youtubeUrl);
+          request({uri: youtubeUrl},function(error2, response2, body2){
+            
+            console.log('body2:', body2);
+            const $ = cheerio.load(body2);
+            const href = $('.yt-lockup-title > a').attr('href');
+            const videoHref = `www.youtube.com.tw${href}`;
+            console.log('href', videoHref);
+            session.send(`[${videoHref}](${videoHref})`);
+            //console.log('error2:', error2); // Print the error if one occurred
+          });
         }
       } else {
         session.send('oops');
