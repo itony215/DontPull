@@ -19,8 +19,8 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
   
 // Create chat bot
 var connector = new builder.ChatConnector({
-    appId: process.env.MICROSOFT_APP_ID,
-    appPassword: process.env.MICROSOFT_APP_PASSWORD
+  appId: process.env.BOTFRAMEWORK_APPID,
+  appPassword: process.env.BOTFRAMEWORK_APPSECRET
 });
 var bot = new builder.UniversalBot(connector);
 server.post('/api/messages', connector.listen());
@@ -60,13 +60,33 @@ bot.dialog('/',
           const youtubeUrl = `${YOUTUBE_API}${encodeURIComponent(result.response)}`;
           console.log(youtubeUrl);
           request({uri: youtubeUrl},function(error2, response2, body2){
-            
+            msg = new builder.Message(session);
+            msg.sourceEvent({
+              facebook: {
+                attachment: {
+                  type: "template",
+                  payload: {
+                    template_type: "generic",
+                    elements: [{
+                      title: "title",
+                      subtitle: "context",
+                      image_url: "https://en.wikipedia.org/wiki/Space_Needle.jpg",
+                      item_url: "http://m.me",
+                      buttons: [{
+                        type: "element_share"
+                      }]
+                    }]
+                  }
+                }
+              }
+            });
             console.log('body2:', body2);
             const $ = cheerio.load(body2);
             const href = $('.yt-lockup-title > a').attr('href');
             const videoHref = `www.youtube.com.tw${href}`;
             console.log('href', videoHref);
             session.send(`[${videoHref}](${videoHref})`);
+            session.send(msg);
             //console.log('error2:', error2); // Print the error if one occurred
           });
         }
